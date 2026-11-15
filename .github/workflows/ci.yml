@@ -2,9 +2,12 @@ name: CI
 
 # Install, build, typecheck and test, with the scripts in package.json.
 #
-# Runs on every PR into main and on every push to main. The push run is the only
-# one that tests the merge commit itself: PRs are squash-merged without being
-# rebased first, so two PRs that each pass can still break main together.
+# Runs on every PR and on every push to main. PRs into other branches run too:
+# a stacked PR that is later retargeted to main gets no new run for the same
+# commit, so the gate and branch protection would wait for a check that never
+# comes. The push run is the only one that tests the merge commit itself: PRs
+# are squash-merged without being rebased first, so two PRs that each pass can
+# still break main together.
 #
 # pr-agent-automerge.yml listens for this workflow by name and merges only when
 # the job below has passed on the PR's latest commit. Keep `name: CI`, and keep
@@ -12,7 +15,6 @@ name: CI
 # status check in main's branch protection.
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 

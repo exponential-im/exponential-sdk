@@ -34,8 +34,9 @@ name: PR-Agent auto-merge
 # the verdict says so. Agent sessions run `gh` as that same person, so this check can't
 # tell them apart — the `pr-agent-ack-guard` Claude Code hook stops sessions adding the
 # label on their side. The label covers only the commit it was applied to — a later push
-# removes it, so a new commit can't merge on an old acknowledgement. It never overrides a
-# failing CI check.
+# removes it, and an acknowledgement older than PR-Agent's review of the latest commit is
+# ignored in any case, so a new commit can't merge on an old acknowledgement. It never
+# overrides a failing CI check.
 #
 # The merge is pinned to the commit PR-Agent reviewed (`sha` on the merge call). A later
 # push can never merge on an earlier review: GitHub refuses a pinned merge whose head has
@@ -55,6 +56,12 @@ name: PR-Agent auto-merge
 #     build. Branch protection should require the same checks all the same.
 #   - Without the App's credentials the gate does nothing at all (see SETUP), so this file
 #     can be on main before the App is installed.
+#   - An acknowledgement is dated against the review it answers. The app's copy relies on
+#     the `synchronize` run to remove the label, and that run can be dropped: runs share one
+#     concurrency slot per branch, and a queued run is replaced by the next one queued.
+#   - A standalone review's findings are read in all three forms PR-Agent writes them. The
+#     app's copy reads only the `<details>` form, so it misses a finding PR-Agent could not
+#     quote lines for.
 #
 # SETUP — nothing merges until a repo admin has done all of this:
 #   1. Create the `pr-agent-automerge` environment, restricted to the `main` branch (so
@@ -255,12 +262,24 @@ jobs:
               ];
               const minor = review.findings.length - review.findings.filter(f => f.tag !== 'minor').length;
               const tally = `${review.findings.length} unresolved finding(s) (${minor} tagged minor)`;
-              const ackActor = pr.labels.some(l => l.name === ACK) ? await ackedBy(number) : null;
-              const acked = ackActor !== null && ACK_BY.includes(ackActor);
+              const ack = pr.labels.some(l => l.name === ACK) ? await lastAck(number) : null;
+              const ackActor = ack?.login ?? null;
+              // An acknowledgement answers one review. A new push normally removes the label
+              // (see the synchronize handler above), but that run can be replaced in the
+              // queue before it starts, so don't count on it: a label added before PR-Agent
+              // began reviewing this commit was given for an earlier one.
+              const ackStale = ack !== null && !(Date.parse(ack.at) >= Date.parse(run.started_at));
+              const acked = ack !== null && !ackStale && ACK_BY.includes(ackActor);
+              if (ackStale) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: number, name: ACK })
+                  .catch(e => { if (e.status !== 404) throw e; });
+              }
               if (blocking.length && !acked) {
-                const ackNote = ackActor !== null
-                  ? `The \`${ACK}\` label was added by @${ackActor}, who isn't allowed to acknowledge; only ${ACK_BY.map(a => `@${a}`).join(', ')} can.`
-                  : `Fix them, or add the \`${ACK}\` label to merge this commit anyway.`;
+                const ackNote = ack === null
+                  ? `Fix them, or add the \`${ACK}\` label to merge this commit anyway.`
+                  : ackStale
+                    ? `The \`${ACK}\` label was added before PR-Agent reviewed \`${short}\`, so it covered an earlier commit and has been removed. Fix them, or add the label again to merge this commit anyway.`
+                    : `The \`${ACK}\` label was added by @${ackActor}, who isn't allowed to acknowledge; only ${ACK_BY.map(a => `@${a}`).join(', ')} can.`;
                 return report(number, `PR-Agent auto-merge skipped on \`${short}\`: ${blocking.length} blocking item(s) from PR-Agent ` +
                   `(${tally}). ${ackNote}\n\n` +
                   blocking.map(b => `- ${b}`).join('\n'));
@@ -335,11 +354,11 @@ jobs:
               return null;
             }
 
-            // Login of whoever last added the ack label, or null if it was never added.
-            async function ackedBy(number) {
+            // Who last added the ack label and when, or null if it was never added.
+            async function lastAck(number) {
               const events = await github.paginate(github.rest.issues.listEvents, { owner, repo, issue_number: number, per_page: 100 });
               const last = events.filter(e => e.event === 'labeled' && e.label?.name === ACK).pop();
-              return last?.actor?.login ?? null;
+              return last ? { login: last.actor?.login ?? null, at: last.created_at } : null;
             }
 
             // Returns { sha, complete, excluded, findings, security }, or null when the comment can't be
@@ -375,9 +394,22 @@ jobs:
               }
               // No state block: every finding listed is from this review (nothing to resolve).
               if (!/<table>[\s\S]*⏱️/.test(body)) return null;
-              const findings = [...body.matchAll(/<details><summary><a href='([^']*)'><strong>([\s\S]*?)<\/strong><\/a>/g)]
-                .map(m => finding(m[2].trim(), m[1], null));
-              if (!findings.length && !/No major issues detected/i.test(body)) return null;
+              // The findings are the ⚡ row of the table. PR-Agent writes each one in one of
+              // three ways, depending on whether it could link the lines and quote them:
+              //   <details><summary><a href='…'><strong>header</strong></a> … </details>
+              //   <a href='…'><strong>header</strong></a><br>…
+              //   <strong>header</strong><br>…
+              // So every <strong> in the row counts as a finding. Quoted code that contains a
+              // <strong> of its own then adds an untagged finding, which blocks: the safe way
+              // to be wrong. A row that is missing or can't be read is an unreadable review.
+              const row = body.match(/⚡(?:&nbsp;|\s)*<strong>([^<]*)<\/strong>([\s\S]*?)(?=\n<tr>\s*<td>|<\/table>|$)/);
+              if (!row) return null;
+              let findings = [];
+              if (!/^No major issues detected/i.test(row[1].trim())) {
+                findings = [...row[2].matchAll(/(?:<a href='([^']*)'>)?<strong>([\s\S]*?)<\/strong>/g)]
+                  .map(m => finding(m[2].trim(), m[1] ?? url, null));
+                if (!findings.length) return null;
+              }
               const sha = body.match(/Review updated until commit \S*\/commit\/([0-9a-f]{40})/)?.[1] ?? null;
               return { sha, complete: true, excluded: [], findings, security };
             }
