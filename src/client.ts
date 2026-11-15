@@ -330,6 +330,12 @@ type TimeEntryCreateInput = {
 };
 
 export interface TrpcClient {
+  agentGuidance: {
+    method: { query: (input?: { workspaceId?: string }) => Promise<unknown> };
+    context: {
+      query: (input: { workspaceId: string; projectId?: string }) => Promise<unknown>;
+    };
+  };
   transcription: {
     getAllTranscriptions: {
       query: (input?: {

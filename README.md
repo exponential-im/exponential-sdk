@@ -324,6 +324,19 @@ holding page for access, placement and publishing — `pages.move`,
 
 ---
 
+### Agent guidance
+
+The method and scoped context every agent surface reads (D-0010). The payload is **guidance, not authority** (ADR-0071): it never grants permission for anything. Responses are returned unchanged, so fields the server adds later pass through.
+
+```typescript
+const ctx = await client.agentGuidance.context({ workspaceId, projectId });
+ctx.instructions;      // [{ scope, sourceId, text }]
+ctx.decisions.items;   // [{ label: 'D-0042', statement, url, ... }], plus ctx.decisions.omitted
+ctx.adrs.items;        // [{ label: 'API-0003', title, url, ... }] (write roles only)
+
+const method = await client.agentGuidance.method(); // throws NOT_FOUND until published
+```
+
 ### Configuration
 
 Credentials are stored persistently using the OS keychain via [`conf`](https://github.com/sindresorhus/conf).
