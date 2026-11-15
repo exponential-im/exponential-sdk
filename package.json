@@ -1,7 +1,18 @@
 {
   "name": "exponential-sdk",
   "version": "1.31.1",
-  "description": "SDK for interacting with the Exponential API",
+  "description": "The official TypeScript SDK for Exponential, the open-source workspace for goals, OKRs, projects and AI agents",
+  "keywords": [
+    "exponential",
+    "sdk",
+    "typescript",
+    "project-management",
+    "okr",
+    "tasks",
+    "ai-agents",
+    "mcp",
+    "trpc"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -36,7 +47,7 @@
     "type": "git",
     "url": "git+https://github.com/exponential-im/exponential-sdk.git"
   },
-  "homepage": "https://github.com/exponential-im/exponential-sdk#readme",
+  "homepage": "https://www.exponential.im/features/integrations/sdk",
   "bugs": {
     "url": "https://github.com/exponential-im/exponential-sdk/issues"
   }
