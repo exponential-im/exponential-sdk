@@ -1,8 +1,12 @@
 # Exponential SDK
 
-The official TypeScript SDK for [Exponential](https://exponential.im) — the AI-powered alignment layer where your goals, your team, and your AI stay in sync.
+The official TypeScript SDK for [Exponential](https://www.exponential.im) — the AI-powered alignment layer where your goals, your team, and your AI stay in sync.
 
 Build integrations that connect daily work to meaningful outcomes. Manage workspaces, projects, and actions programmatically.
+
+**[SDK overview](https://www.exponential.im/features/integrations/sdk)** · **[MCP & SDK docs](https://www.exponential.im/docs/developers/mcp-and-sdk)** · **[API tokens](https://www.exponential.im/docs/developers/api-tokens)** · **[External agents](https://www.exponential.im/docs/developers/external-agents)**
+
+The [CLI](https://github.com/exponential-im/exponential-cli) and the [MCP server](https://github.com/exponential-im/exponential-mcp) are built on this SDK.
 
 ## Install
 
@@ -17,7 +21,7 @@ import { ExponentialClient, saveConfig, loadConfig } from "exponential-sdk";
 
 // Persist your credentials
 saveConfig({
-  apiUrl: "https://exponential.im",
+  apiUrl: "https://www.exponential.im",
   token: "your-bearer-token",
 });
 
@@ -44,7 +48,7 @@ Create a client with your API token:
 ```typescript
 const client = new ExponentialClient({
   token: "your-bearer-token",
-  apiUrl: "https://exponential.im",
+  apiUrl: "https://www.exponential.im",
 });
 ```
 
@@ -338,7 +342,7 @@ import {
 } from "exponential-sdk";
 
 saveConfig({
-  apiUrl: "https://exponential.im",
+  apiUrl: "https://www.exponential.im",
   token: "your-bearer-token",
   defaultWorkspaceId: "ws-123",
   defaultWorkspaceSlug: "my-team",
