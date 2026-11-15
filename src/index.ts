@@ -24,6 +24,7 @@ import { AreasApi } from './areas.js';
 import { MeetingsApi } from './meetings.js';
 import { CalendarApi } from './calendar.js';
 import { CyclesApi } from './cycles.js';
+import { AgentGuidanceApi } from './agentGuidance.js';
 import { PagesApi } from './pages.js';
 import { DatabasesApi } from './databases.js';
 import { ResourcesApi } from './resources.js';
@@ -76,6 +77,8 @@ export class ExponentialClient {
   time: TimeApi;
   /** Agent runs — the local runner's claim/heartbeat/append/finish (ADR-0067); agent-key only. */
   agentRuns: AgentRunsApi;
+  /** Agent guidance — the method and scoped context (D-0010). Guidance, not authority (ADR-0071). */
+  agentGuidance: AgentGuidanceApi;
 
   constructor(private config: { token: string; apiUrl: string }) {
     this.client = createClient(this.config);
@@ -113,6 +116,7 @@ export class ExponentialClient {
     this.users = new UsersApi(this.client);
     this.time = new TimeApi(this.client);
     this.agentRuns = new AgentRunsApi(this.client);
+    this.agentGuidance = new AgentGuidanceApi(this.client);
   }
 }
 
@@ -564,6 +568,18 @@ export type {
 } from './calendar.js';
 export { CALENDAR_MAX_RESULTS, CALENDAR_MAX_SELECTED } from './calendar.js';
 export type { Cycle, CycleDetail, CycleStatus } from './types/cycle.js';
+export { AgentGuidanceApi } from './agentGuidance.js';
+export type { AgentContextOptions, AgentMethodOptions } from './agentGuidance.js';
+export type {
+  AgentContextAdr,
+  AgentContextDecision,
+  AgentContextInstruction,
+  AgentContextList,
+  AgentContextPayload,
+  AgentInstructionScope,
+  AgentMethodDocument,
+  AgentMethodPayload,
+} from './types/agentGuidance.js';
 export type {
   CycleListOptions,
   CycleCreateInput,
