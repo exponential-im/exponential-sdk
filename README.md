@@ -385,6 +385,30 @@ try {
 }
 ```
 
+## Contributing
+
+### Who merges: the PR-Agent auto-merge gate, or James
+
+`.github/workflows/pr-agent-automerge.yml` squash-merges a PR into `main` once CI
+(`Build, typecheck & test`) is green and PR-Agent left nothing blocking on the latest
+commit. **Agent sessions do not merge PRs.**
+
+PR-Agent runs review-only: GLM 5.3 through OpenRouter, one call per push. It doesn't
+rewrite descriptions or post code suggestions. What blocks is a review finding tagged
+`[blocker]` or left untagged, or a security concern. Fix those; `[minor]` findings don't
+hold the merge. Every push is reviewed again and paid for, so batch fixes into one push
+rather than pushing each one separately. The model and house rules are in `.pr_agent.toml`;
+PR-Agent reads that file from `main`, so editing it on a branch changes nothing until merged.
+
+- Never run `gh pr merge`, and never pass `--merge` to `/ship-this` or `/ship-ticket`. Open
+  the PR, apply PR-Agent's findings, push, and stop at "in review". The gate (or James) merges.
+- Never add the `pr-agent-ack` label. It means "James saw the blocker and is merging anyway".
+  Only James applies it, and the gate ignores it from anyone else.
+- A PR you can't get past the gate is left for James with a comment saying what blocks it
+  and why you could not fix it.
+- `no-automerge` on a PR keeps it human-only. Don't remove it.
+- PRs from forks and PRs opened by bots are never auto-merged; James merges those.
+
 ## Requirements
 
 - Node.js >= 18.0.0

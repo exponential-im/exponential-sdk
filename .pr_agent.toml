@@ -1,0 +1,109 @@
+# PR-Agent (Qodo) configuration — version-controlled review behaviour.
+# Full reference: https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/
+# The API key (OPENROUTER.KEY) and which tools run (review only) live in
+# .github/workflows/pr_agent.yml. The model lives here, not there: PR-Agent applies
+# this file after the workflow's env vars, so this file wins on any key both set.
+# PR-Agent reads this file from main, so a change here only takes effect once merged.
+#
+# The [config] and [openrouter] sections are the app repo's (exponential-im/exponential,
+# .pr_agent.toml); keep them the same. The house rules below are this repo's own.
+
+[config]
+# GLM 5.3 through OpenRouter. Both models are OpenRouter ones, so PR-Agent never
+# needs an Anthropic or OpenAI key. GLM 5.2 is the same price on Z.AI's endpoint.
+model = "openrouter/z-ai/glm-5.3"
+fallback_models = ["openrouter/z-ai/glm-5.2"]
+# Declared so PR-Agent can budget the diff even when the bundled litellm build
+# predates this model and has no registry entry for it (without this, an
+# unregistered model errors during token counting). This is only the ceiling —
+# the effective diff budget is max_model_tokens below.
+custom_model_max_tokens = 200000
+# The diff budget. PR-Agent's default is 32k, and a diff bigger than that gets a partial
+# review: files are left out, the review state says `complete: false`, and the auto-merge
+# gate holds the PR for a person. At 128k a full review of a big PR costs about $0.18 at
+# Z.AI's $1.40 per million input tokens; small PRs cost the same as at 32k.
+max_model_tokens = 128000
+# Markdown rendering of the model's suggestions.
+publish_output = true
+
+[openrouter]
+# Serve GLM only from Z.AI's own endpoint. GLM is an open model and OpenRouter
+# otherwise routes to the cheapest of ~40 hosts, some running cut-down (fp4)
+# builds, and each of them would see our diffs. If Z.AI is down the call fails
+# rather than moving to another host, and the check goes red.
+provider_only = ["z-ai"]
+
+[pr_reviewer]
+# Concise, focused review. Flip these on if you want more.
+require_score_review = false
+require_tests_review = true
+require_security_review = true
+num_max_findings = 8
+# Don't re-post the whole review on every push; update the existing comment.
+persistent_comment = true
+final_update_message = false
+# Repo-specific rules the reviewer can't infer from the diff.
+extra_instructions = """
+This repo is exponential-sdk: the TypeScript client for the Exponential API, published
+to npm. exponential-cli and exponential-mcp depend on it with a caret range, and so do
+other people's programs. Flag violations of this repo's house rules, with the rule named:
+
+Public API — everything exported from src/index.ts is a contract. Flag a removed or
+renamed export, method, option or field, a new required argument, or a changed return
+shape, unless package.json's version takes a major bump in the same PR. A new API class,
+method or type that callers need must be reachable from src/index.ts (types with
+`export type`), and a new API class must be attached to ExponentialClient there.
+
+tRPC contract — src/client.ts declares TrpcClient by hand as a mirror of the app's
+router, so the compiler cannot check it against the server. Flag a call to a procedure
+that TrpcClient does not declare, a cast used to get round the interface (`as any`,
+`as unknown as` outside tests), and an input type that drops a field the server
+requires. Inputs that clear a field take `null`; a field left out means "unchanged".
+Flag code that turns one into the other.
+
+Credentials — the token is a bearer credential. Flag anything that logs it, puts it in
+an error message or a thrown value, or writes it anywhere except the config store in
+src/config.ts. The library itself never writes to stdout or stderr.
+
+Dependencies and build — a dependency added or changed in package.json comes with the
+matching package-lock.json change, or `npm ci` fails in CI. The package ships only
+`dist` (built by tsup from src/index.ts, ESM only): flag a change that would leave
+dist/index.js or dist/index.d.ts out of the published tarball, and a new runtime
+dependency that is declared under devDependencies.
+
+TypeScript — strict mode; no `any` in new code; relative imports carry the `.js`
+extension; type-only imports use `import type`; every promise is awaited or returned.
+
+Tests — vitest, next to the code as src/*.test.ts, with TrpcClient mocked (`vi.fn()`).
+A test must not call the network or read the real config store. A new method that
+does more than pass its input straight through needs a test.
+
+Severity — begin the header of every key issue with exactly one tag, then the title
+as usual (e.g. "[blocker] Removed export without a major bump"):
+[blocker] — merging this commit as-is would ship a bug, a security hole, a leaked
+credential, a breaking change to the published API without a major version bump, or a
+build/CI failure, or would break a house rule above.
+[minor] — everything else, including anything you are not confident is a real
+problem (a "worth confirming", "may", or "could" finding is minor).
+An automated merge gate reads these tags: a [blocker] holds the PR for a human, a
+[minor] does not. Tag honestly in both directions.
+"""
+
+[pr_description]
+# Structured description + walkthrough. Not run automatically (pr_agent.yml is
+# review-only); applies when someone comments `/describe` on a PR.
+publish_description_as_comment = false
+add_original_user_description = true
+generate_ai_title = false
+
+[pr_code_suggestions]
+# Improvement suggestions. Not run automatically (pr_agent.yml is review-only);
+# applies when someone comments `/improve` on a PR. Keep the volume sane.
+num_code_suggestions = 4
+commitable_code_suggestions = false
+extra_instructions = """
+Never suggest code that would fail this repo's own gates or house rules: no `any`, no
+relative import without its `.js` extension, no `import` of types without `import type`,
+no unhandled promise, and no change to an exported name or signature.
+Skip cosmetic suggestions — there is no formatter here and style churn is not wanted.
+"""
