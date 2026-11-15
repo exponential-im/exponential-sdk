@@ -31,5 +31,13 @@
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
-  "license": "MIT"
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exponential-im/exponential-sdk.git"
+  },
+  "homepage": "https://github.com/exponential-im/exponential-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/exponential-im/exponential-sdk/issues"
+  }
 }
