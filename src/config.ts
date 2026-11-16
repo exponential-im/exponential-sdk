@@ -56,7 +56,17 @@ function writeConfig(store: Conf<ExponentialConfig>, values: Partial<Exponential
   if (values.defaultWorkspaceSlug !== undefined) store.set('defaultWorkspaceSlug', values.defaultWorkspaceSlug);
 }
 
-const defaultStore = createStore('exponential-sdk');
+let defaultStore: Conf<ExponentialConfig> | undefined;
+
+/**
+ * The SDK's own store, created on first use rather than at import: conf writes
+ * a file when it is constructed, and a server that imports the SDK only for
+ * `ExponentialClient` may run on a read-only filesystem (Vercel functions).
+ */
+function getDefaultStore(): Conf<ExponentialConfig> {
+  defaultStore ??= createStore('exponential-sdk');
+  return defaultStore;
+}
 
 export function createConfigStore(options?: { projectName?: string }) {
   const store = createStore(options?.projectName ?? 'exponential-sdk');
@@ -74,22 +84,22 @@ export function createConfigStore(options?: { projectName?: string }) {
 }
 
 export function loadConfig(): ExponentialConfig {
-  return readConfig(defaultStore);
+  return readConfig(getDefaultStore());
 }
 
 export function saveConfig(values: Partial<ExponentialConfig>): void {
-  writeConfig(defaultStore, values);
+  writeConfig(getDefaultStore(), values);
 }
 
 export function clearConfig(): void {
-  defaultStore.clear();
+  getDefaultStore().clear();
 }
 
 export function isAuthenticated(): boolean {
-  const cfg = readConfig(defaultStore);
+  const cfg = readConfig(getDefaultStore());
   return Boolean(cfg.token && cfg.apiUrl);
 }
 
 export function getConfigPath(): string {
-  return defaultStore.path;
+  return getDefaultStore().path;
 }
