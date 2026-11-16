@@ -48,6 +48,30 @@ const client = new ExponentialClient({
 });
 ```
 
+| Option | Required | Description |
+|---|---|---|
+| `token` | yes | Sent as `Authorization: Bearer <token>`: an `exp_agent_…` key or an API token. |
+| `apiUrl` | yes | The app's base URL. Requests go to `<apiUrl>/api/trpc`. |
+| `fetch` | no | Replaces the transport: every request goes through this function instead of the global `fetch`. Same signature as `fetch`. |
+
+Supplying `fetch` lets a server run the client without a network hop, for example by handing each request to a tRPC handler in the same process:
+
+```typescript
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+
+const client = new ExponentialClient({
+  token,
+  apiUrl: "https://exponential.im",
+  fetch: (input, init) =>
+    fetchRequestHandler({
+      endpoint: "/api/trpc",
+      req: new Request(input, init),
+      router: appRouter,
+      createContext: () => context,
+    }),
+});
+```
+
 ---
 
 ### Workspaces
