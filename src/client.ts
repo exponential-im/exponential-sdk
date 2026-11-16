@@ -92,7 +92,12 @@ type ActionCreateInput = {
   epicId?: string;
   effortEstimate?: number;
   blockedByIds?: string[];
+  assigneeIds?: string[];
+  assigneeEmails?: string[];
 };
+
+type ActionAssignInput = { actionId: string; userIds?: string[]; emails?: string[] };
+type ActionUnassignInput = ActionAssignInput & { all?: boolean };
 
 // ── Goals (objectives) and key results ──────────────────────────────────────
 // Objectives are `Goal` rows with INTEGER ids; key results are `KeyResult` rows
@@ -415,6 +420,8 @@ export interface TrpcClient {
     upsertBySource: { mutate: (input: ActionUpsertBySourceInput) => Promise<unknown> };
     bulkReschedule: { mutate: (input: { actionIds: string[]; dueDate: Date | null }) => Promise<unknown> };
     bulkDefer: { mutate: (input: { actionIds: string[] }) => Promise<unknown> };
+    assign: { mutate: (input: ActionAssignInput) => Promise<unknown> };
+    unassign: { mutate: (input: ActionUnassignInput) => Promise<unknown> };
   };
   project: {
     getAll: { query: (input?: ProjectInput) => Promise<unknown[]> };

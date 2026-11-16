@@ -149,6 +149,7 @@ export type {
   ActionUpdateInput,
   ActionUpsertBySourceInput,
   ActionUpsertBySourceResult,
+  AssigneeRefs,
   ActionStatus,
   TodaysActions,
   TodaysActionsGroup,
@@ -157,6 +158,7 @@ export type {
   OverdueCohort,
   OverdueTriageRow,
 } from './actions.js';
+export { ActionsApi, splitAssigneeRefs } from './actions.js';
 export type {
   Project,
   ProjectDetail,

@@ -29,6 +29,31 @@ export interface ActionCreateInput {
   epicId?: string;
   effortEstimate?: number;
   blockedByIds?: string[];
+  /** Users to assign, by id. Each must be assignable in the action's project or workspace, or the create is NOT_FOUND. */
+  assigneeIds?: string[];
+  /** Users to assign, by email (case-insensitive). Checked exactly like `assigneeIds`. */
+  assigneeEmails?: string[];
+}
+
+/**
+ * Who to add or remove: user ids, emails, or both. {@link splitAssigneeRefs}
+ * builds one from mixed `id|email` strings.
+ */
+export interface AssigneeRefs {
+  userIds?: string[];
+  emails?: string[];
+}
+
+/**
+ * Split mixed assignee references (`--assignee` values, say) into ids and
+ * emails: anything containing `@` is an email. Accepts comma-separated items.
+ */
+export function splitAssigneeRefs(refs: string[]): Required<AssigneeRefs> {
+  const items = refs.flatMap((r) => r.split(',')).map((r) => r.trim()).filter(Boolean);
+  return {
+    userIds: [...new Set(items.filter((r) => !r.includes('@')))],
+    emails: [...new Set(items.filter((r) => r.includes('@')))],
+  };
 }
 
 export interface ActionUpdateInput {
@@ -255,6 +280,33 @@ export class ActionsApi {
 
   async update(input: ActionUpdateInput): Promise<Action> {
     return await this.client.action.update.mutate(input) as Action;
+  }
+
+  /**
+   * Add assignees. Additive and idempotent: existing assignees stay, and
+   * re-adding one is a no-op. Every user must be assignable in the action's
+   * project, team or workspace, or the whole call is NOT_FOUND and nothing
+   * changes. Remove with {@link unassign}; there is no replace-the-set call.
+   */
+  async assign(actionId: string, refs: AssigneeRefs): Promise<Action> {
+    return await this.client.action.assign.mutate({
+      actionId,
+      userIds: refs.userIds ?? [],
+      ...(refs.emails?.length ? { emails: refs.emails } : {}),
+    }) as Action;
+  }
+
+  /**
+   * Remove assignees by id or email; users who are not assigned are ignored.
+   * Pass `{ all: true }` to clear every assignee.
+   */
+  async unassign(actionId: string, refs: AssigneeRefs & { all?: boolean }): Promise<Action> {
+    return await this.client.action.unassign.mutate({
+      actionId,
+      userIds: refs.userIds ?? [],
+      ...(refs.emails?.length ? { emails: refs.emails } : {}),
+      ...(refs.all ? { all: true } : {}),
+    }) as Action;
   }
 
   /**
