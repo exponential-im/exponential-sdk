@@ -1,4 +1,10 @@
-import { createClient, isTRPCError, TRPCClientError, type TrpcClient } from './client.js';
+import {
+  createClient,
+  isTRPCError,
+  TRPCClientError,
+  type ExponentialClientConfig,
+  type TrpcClient,
+} from './client.js';
 import { ActionsApi } from './actions.js';
 import { ActionCommentsApi } from './actionComments.js';
 import { FeatureCommentsApi } from './featureComments.js';
@@ -80,7 +86,7 @@ export class ExponentialClient {
   /** Agent guidance — the method and scoped context (D-0010). Guidance, not authority (ADR-0071). */
   agentGuidance: AgentGuidanceApi;
 
-  constructor(private config: { token: string; apiUrl: string }) {
+  constructor(private config: ExponentialClientConfig) {
     this.client = createClient(this.config);
     this.actions = new ActionsApi(this.client);
     this.actionComments = new ActionCommentsApi(this.client);
@@ -517,6 +523,7 @@ export type {
   SetEntityTagsResult,
 } from './labels.js';
 export { isTRPCError, TRPCClientError };
+export type { ExponentialClientConfig, ExponentialFetch } from './client.js';
 export { TimeApi } from './time.js';
 export type {
   TimeEntry,

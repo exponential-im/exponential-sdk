@@ -854,7 +854,27 @@ export interface TrpcClient {
   };
 }
 
-export function createClient(config: { token: string; apiUrl: string }): TrpcClient {
+/**
+ * The function the client sends its HTTP requests through. Same shape as the
+ * global `fetch`.
+ */
+export type ExponentialFetch = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
+/** What `ExponentialClient` and `createClient` take. */
+export interface ExponentialClientConfig {
+  /** Sent as `Authorization: Bearer <token>`: an `exp_agent_…` key or an API token. */
+  token: string;
+  /** The app's base URL, e.g. `https://www.exponential.im`. Requests go to `<apiUrl>/api/trpc`. */
+  apiUrl: string;
+  /**
+   * Replaces the transport. Every request goes through this function instead of
+   * the global `fetch`, e.g. to hand it to a tRPC handler in the same process.
+   * Omit it to use the global `fetch`.
+   */
+  fetch?: ExponentialFetch;
+}
+
+export function createClient(config: ExponentialClientConfig): TrpcClient {
   const apiUrl = config.apiUrl.replace(/\/+$/, '');
 
   return createTRPCClient<any>({
@@ -867,6 +887,7 @@ export function createClient(config: { token: string; apiUrl: string }): TrpcCli
           };
         },
         transformer: superjson,
+        fetch: config.fetch,
       }),
     ],
   }) as unknown as TrpcClient;
