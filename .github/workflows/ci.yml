@@ -1,0 +1,47 @@
+name: CI
+
+# Install, build, typecheck and test, with the scripts in package.json.
+#
+# Runs on every PR and on every push to main. PRs into other branches run too:
+# a stacked PR that is later retargeted to main gets no new run for the same
+# commit, so the gate and branch protection would wait for a check that never
+# comes. The push run is the only one that tests the merge commit itself: PRs
+# are squash-merged without being rebased first, so two PRs that each pass can
+# still break main together.
+#
+# pr-agent-automerge.yml listens for this workflow by name and merges only when
+# the job below has passed on the PR's latest commit. Keep `name: CI`, and keep
+# the job name the same as REQUIRED_CHECKS in that file and as the required
+# status check in main's branch protection.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to a PR cancels that PR's still-running run: only the newest commit
+# can be merged, so the older run's verdict is worthless. Runs on main are never
+# cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Build, typecheck & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # The oldest Node line still maintained. package.json's engines allows
+          # older ones, but nothing here is tested on them.
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
