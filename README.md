@@ -174,6 +174,19 @@ const todo = await client.actions.getKanban({ status: "TODO" });
 
 // Get all actions for a project
 const projectActions = await client.actions.getProjectActions("proj-123");
+
+// Create an action already assigned (by user id and/or email)
+await client.actions.create({ name: "Follow up", projectId: "proj-123", assigneeEmails: ["ada@example.com"] });
+
+// Add assignees: additive, idempotent; existing assignees stay
+await client.actions.assign("act-123", { emails: ["ada@example.com"], userIds: ["user-456"] });
+
+// Remove assignees, or clear them all
+await client.actions.unassign("act-123", { userIds: ["user-456"] });
+await client.actions.unassign("act-123", { all: true });
+
+// Mixed "id or email" strings (e.g. CLI flags) → { userIds, emails }
+splitAssigneeRefs(["user-456,ada@example.com"]);
 ```
 
 #### Kanban Statuses
