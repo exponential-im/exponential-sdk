@@ -516,7 +516,12 @@ export type {
   KnowledgeSearchResult,
   KnowledgeSearchOutput,
 } from './types/search.js';
-export type { Tag, TagEntityType, TagListResult } from './types/tag.js';
+export type { Tag, TagEntityType, TagListResult, TagRef } from './types/tag.js';
+export {
+  PILLAR_CATEGORY,
+  PILLAR_ONLY_ENTITY_TYPES,
+  TAG_ENTITY_TYPES,
+} from './types/tag.js';
 export type {
   LabelListOptions,
   LabelCreateInput,

@@ -31,6 +31,11 @@ export interface DecisionListOptions {
   search?: string;
   /** One decision by its workspace sequence number — `D-0003` is number 3. */
   number?: number;
+  /**
+   * Only decisions carrying ANY of these Pillar or label ids (max 50). Every
+   * row comes back with its `tags` either way.
+   */
+  tagIds?: string[];
   /** Cap the rows returned (1-500). Unset returns everything visible. */
   limit?: number;
 }
@@ -96,6 +101,12 @@ export interface DecisionSetStatusInput {
 
 /**
  * Decisions — the writable half of the Decision Log (ADR-0060).
+ *
+ * A decision is filed under Pillars and labels (ADR-0086), but not through
+ * this API: `create` takes no tags and `get` returns none. Tag a decision
+ * after creating it with `labels.setEntityTags({ entityType: 'decision', ... })`
+ * and read its tags with `labels.listForEntity`. Workspace `list` rows carry
+ * `tags`, and `list({ tagIds })` filters by them.
  *
  * The one thing worth knowing before using this: **an open question is a
  * decision with status `OPEN`**. There is no separate model, and it is what

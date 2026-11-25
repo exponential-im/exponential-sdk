@@ -72,6 +72,31 @@ describe('DecisionsApi.list', () => {
   });
 });
 
+describe('DecisionsApi.list tags', () => {
+  it('sends tagIds through as the server filter', async () => {
+    const { api, list } = makeClient();
+    await api.list({ workspaceId: 'w1', tagIds: ['pillar-1', 'label-2'] });
+    expect(list).toHaveBeenCalledWith({
+      workspaceId: 'w1',
+      tagIds: ['pillar-1', 'label-2'],
+    });
+  });
+
+  it('returns each row with its Pillars and labels', async () => {
+    const { api, list } = makeClient();
+    const tags = [
+      { id: 'p1', name: 'Data Quality', slug: 'data-quality', color: 'blue', category: 'pillar', archivedAt: null },
+      { id: 'l1', name: 'infra', slug: 'infra', color: 'gray', category: null, archivedAt: null },
+    ];
+    list.mockResolvedValueOnce([{ id: 'd1', label: 'D-0001', tags }]);
+    const rows = await api.list({ workspaceId: 'w1' });
+    expect(rows[0]!.tags).toEqual(tags);
+    expect(rows[0]!.tags!.filter((t) => t.category === 'pillar').map((t) => t.name)).toEqual([
+      'Data Quality',
+    ]);
+  });
+});
+
 describe('DecisionsApi.list paging', () => {
   it('passes number and limit through', async () => {
     const { api, list } = makeClient();
