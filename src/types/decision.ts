@@ -163,8 +163,9 @@ export interface DecisionListRow {
   /** Present only on `listForMeeting` rows. */
   reviewState?: DecisionReviewState;
   /**
-   * The decision's Pillars and labels, oldest first. Present on workspace
-   * `list` rows. A Pillar has `category === 'pillar'`; anything else is a
+   * The decision's Pillars and labels, oldest first. Present on `list`,
+   * `listForMeeting` and `listForAdr` rows (servers from exponential-app
+   * PR 1226 on). A Pillar has `category === 'pillar'`; anything else is a
    * label. Set them with `labels.setEntityTags({ entityType: 'decision' })`.
    */
   tags?: TagRef[];

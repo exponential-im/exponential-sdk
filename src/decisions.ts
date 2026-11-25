@@ -105,8 +105,8 @@ export interface DecisionSetStatusInput {
  * A decision is filed under Pillars and labels (ADR-0086), but not through
  * this API: `create` takes no tags and `get` returns none. Tag a decision
  * after creating it with `labels.setEntityTags({ entityType: 'decision', ... })`
- * and read its tags with `labels.listForEntity`. Workspace `list` rows carry
- * `tags`, and `list({ tagIds })` filters by them.
+ * and read its tags with `labels.listForEntity`. List rows carry `tags`, and
+ * `list({ tagIds })` filters by them.
  *
  * The one thing worth knowing before using this: **an open question is a
  * decision with status `OPEN`**. There is no separate model, and it is what
