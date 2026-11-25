@@ -13,6 +13,7 @@ import type {
   PositionImportInput,
   PositionUpdateInput,
 } from './positions.js';
+import type { TagEntityType } from './types/tag.js';
 
 type ActionInput = {
   assigneeId?: string;
@@ -598,6 +599,8 @@ export interface TrpcClient {
         search?: string;
         /** One decision by its workspace sequence number — `D-0003` → 3. */
         number?: number;
+        /** Only decisions carrying ANY of these Pillars or labels (max 50). */
+        tagIds?: string[];
         limit?: number;
       }) => Promise<unknown[]>;
     };
@@ -795,8 +798,8 @@ export interface TrpcClient {
   tag: {
     list: { query: (input?: { workspaceId?: string; category?: string | null }) => Promise<unknown> };
     create: { mutate: (input: { workspaceId: string; name: string; color: string; description?: string; category?: string | null }) => Promise<unknown> };
-    setEntityTags: { mutate: (input: { entityType: 'action' | 'ticket' | 'feature' | 'epic'; entityId: string; tagIds: string[] }) => Promise<unknown> };
-    listForEntity: { query: (input: { entityType: 'action' | 'ticket' | 'feature' | 'epic'; entityId: string }) => Promise<unknown[]> };
+    setEntityTags: { mutate: (input: { entityType: TagEntityType; entityId: string; tagIds: string[] }) => Promise<unknown> };
+    listForEntity: { query: (input: { entityType: TagEntityType; entityId: string }) => Promise<unknown[]> };
   };
   product: {
     product: {

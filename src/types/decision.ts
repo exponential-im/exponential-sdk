@@ -5,6 +5,8 @@
 // `ACCEPTED` (or `PROPOSED`), and an OPEN QUESTION is simply a Decision whose
 // status is `OPEN` — there is no separate "open question" model.
 
+import type { TagRef } from './tag.js';
+
 /**
  * Lifecycle of a decision.
  *
@@ -160,6 +162,13 @@ export interface DecisionListRow {
     | null;
   /** Present only on `listForMeeting` rows. */
   reviewState?: DecisionReviewState;
+  /**
+   * The decision's Pillars and labels, oldest first. Present on `list`,
+   * `listForMeeting` and `listForAdr` rows (servers from exponential-app
+   * PR 1226 on). A Pillar has `category === 'pillar'`; anything else is a
+   * label. Set them with `labels.setEntityTags({ entityType: 'decision' })`.
+   */
+  tags?: TagRef[];
   _count?: { links: number; deciders: number };
 }
 

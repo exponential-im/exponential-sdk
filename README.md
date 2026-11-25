@@ -272,6 +272,31 @@ await client.decisions.setStatus({ workspaceId: "ws-123", decisionId: "d1", stat
 await client.decisions.linkTicket("ws-123", "d1", "ticket-123");
 ```
 
+#### Pillars and labels
+
+A decision is filed under Pillars and labels. `create` takes no tags and `get`
+returns none: tag a decision after creating it, through the labels API, and
+read its tags back the same way. Workspace `list` rows carry `tags`, and
+`tagIds` filters the log to decisions carrying **any** of the given tags
+(max 50). A tag with `category === "pillar"` is a Pillar; any other is a label.
+
+```typescript
+// The log, filtered to one Pillar; each row has tags: [{ id, name, slug, color, category, archivedAt }]
+const rows = await client.decisions.list({ workspaceId: "ws-123", tagIds: ["pillar-id"] });
+
+// setEntityTags REPLACES the whole set, so read it first to add one
+const current = await client.labels.listForEntity({ entityType: "decision", entityId: "d1" });
+await client.labels.setEntityTags({
+  entityType: "decision",
+  entityId: "d1",
+  tagIds: [...current.map((t) => t.id), "pillar-id"],
+});
+```
+
+`setEntityTags` and `listForEntity` take `action`, `ticket`, `feature`, `epic`,
+`decision` (Pillars and labels) and `project`, `goal`, `resource`,
+`recurringTask` (Pillars only).
+
 #### Statuses
 
 `OPEN` (open question) · `PROPOSED` · `ACCEPTED` · `SUPERSEDED` · `DEPRECATED`
