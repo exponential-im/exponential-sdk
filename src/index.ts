@@ -297,6 +297,7 @@ export type {
   DecisionDecider,
   DecisionEvidenceTurn,
   DecisionFeatureRef,
+  DecisionScopeRef,
   DecisionLink,
   DecisionListRow,
   DecisionMeetingRef,

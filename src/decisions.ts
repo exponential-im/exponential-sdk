@@ -27,7 +27,7 @@ export interface DecisionListOptions {
   /** With a real `productId`: ALSO include decisions that have no product. */
   includeWorkspaceWide?: boolean;
   projectId?: string;
-  /** Free-text over statement and body (max 200 characters). */
+  /** Free-text over title, statement and body (max 200 characters). */
   search?: string;
   /** One decision by its workspace sequence number — `D-0003` is number 3. */
   number?: number;
@@ -42,6 +42,12 @@ export interface DecisionListOptions {
 
 export interface DecisionCreateInput {
   workspaceId: string;
+  /**
+   * The outcome in six words or fewer ("Text place beats Dataminr location"),
+   * shown as the row text in every decision list. Max 120 characters; the
+   * six-word limit is advice, not enforced. Omit or pass null for none.
+   */
+  title?: string | null;
   /** The decision itself, or the open question. Max 500 characters. */
   statement: string;
   /** Markdown detail — context, alternatives, consequences. Max 20,000. */
@@ -80,6 +86,12 @@ export interface DecisionCreateInput {
 export interface DecisionUpdateInput {
   workspaceId: string;
   decisionId: string;
+  /**
+   * Pass null (or an empty string) to clear it. Like `statement` and `body`,
+   * an agent key may set it on a draft but gets FORBIDDEN changing it on a
+   * confirmed decision; only a person signed in as themselves can.
+   */
+  title?: string | null;
   statement?: string;
   body?: string | null;
   decidedAt?: Date | null;
@@ -218,7 +230,25 @@ export class DecisionsApi {
     }) as DecisionLink;
   }
 
-  /** Remove one link, by the `DecisionLink` id (not the ticket/feature id). */
+  /**
+   * "Implemented by" one of a feature's scopes (V1, V2, ...). The scope's
+   * feature must belong to a product in this workspace. Idempotent: an
+   * existing link is returned. A scope-linked decision also shows on its
+   * feature's Decisions block, and groups under the scope on a Pillar page.
+   */
+  async linkScope(
+    workspaceId: string,
+    decisionId: string,
+    scopeId: string,
+  ): Promise<DecisionLink> {
+    return await this.client.decision.linkScope.mutate({
+      workspaceId,
+      decisionId,
+      scopeId,
+    }) as DecisionLink;
+  }
+
+  /** Remove one link, by the `DecisionLink` id (not the ticket, feature or scope id). */
   async unlink(workspaceId: string, linkId: string): Promise<{ deleted: boolean }> {
     return await this.client.decision.unlink.mutate({
       workspaceId,
