@@ -91,6 +91,12 @@ export interface TicketDecision {
   /** Workspace sequence number; `label` is its `D-0042` form. */
   number: number;
   label: string;
+  /**
+   * The outcome in six words or fewer; the row text when set, with the
+   * statement under it. Null when the decision has none. Servers before
+   * exponential-app PR 1232 leave it out.
+   */
+  title?: string | null;
   statement: string;
   status: DecisionStatus;
   decidedAt: Date | string | null;
