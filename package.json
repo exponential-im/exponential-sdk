@@ -1,6 +1,6 @@
 {
   "name": "exponential-sdk",
-  "version": "1.37.0",
+  "version": "1.37.1",
   "description": "SDK for interacting with the Exponential API",
   "type": "module",
   "main": "./dist/index.js",
@@ -15,7 +15,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
   },
   "engines": {
     "node": ">=18.0.0"
