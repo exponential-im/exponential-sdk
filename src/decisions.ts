@@ -86,7 +86,11 @@ export interface DecisionCreateInput {
 export interface DecisionUpdateInput {
   workspaceId: string;
   decisionId: string;
-  /** Pass null (or an empty string) to clear it. */
+  /**
+   * Pass null (or an empty string) to clear it. Like `statement` and `body`,
+   * an agent key may set it on a draft but gets FORBIDDEN changing it on a
+   * confirmed decision; only a person signed in as themselves can.
+   */
   title?: string | null;
   statement?: string;
   body?: string | null;
