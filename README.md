@@ -283,7 +283,7 @@ to clear it), list and detail rows return it, and `search` matches it.
 `linkScope` links a decision to one of a feature's scopes (V1, V2, ...)
 instead of the whole feature. The decision then shows on the feature's
 Decisions block with the scope's version, and on a Pillar page it groups under
-that scope. The link's `scope` carries `{ id, version, description, featureId }`.
+that scope. On `get`, the link's `scope` carries `{ id, version, description, status, feature: { id, name } }`.
 
 ```typescript
 await client.decisions.create({

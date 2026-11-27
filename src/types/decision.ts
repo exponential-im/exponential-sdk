@@ -113,7 +113,7 @@ export interface DecisionScopeRef {
   id: string;
   version: string;
   description: string | null;
-  featureId: string;
+  status?: string;
   feature?: { id: string; name: string } | null;
 }
 
