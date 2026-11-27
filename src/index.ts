@@ -486,6 +486,7 @@ export type {
 export type {
   Ticket,
   TicketDetail,
+  TicketDecision,
   TicketAssignee,
   TicketDependencyEdge,
   TicketStatus,
