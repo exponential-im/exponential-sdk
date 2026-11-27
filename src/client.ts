@@ -285,6 +285,7 @@ type DecisionDeciderProcedureInput = {
 
 type DecisionCreateProcedureInput = {
   workspaceId: string;
+  title?: string | null;
   statement: string;
   body?: string | null;
   status?: DecisionStatusInput;
@@ -304,6 +305,7 @@ type DecisionCreateProcedureInput = {
 type DecisionUpdateProcedureInput = {
   workspaceId: string;
   decisionId: string;
+  title?: string | null;
   statement?: string;
   body?: string | null;
   decidedAt?: Date | null;
@@ -634,7 +636,10 @@ export interface TrpcClient {
     linkFeature: {
       mutate: (input: { workspaceId: string; decisionId: string; featureId: string }) => Promise<unknown>;
     };
-    /** `linkId` is the DecisionLink id, not the ticket or feature id. */
+    linkScope: {
+      mutate: (input: { workspaceId: string; decisionId: string; scopeId: string }) => Promise<unknown>;
+    };
+    /** `linkId` is the DecisionLink id, not the ticket, feature or scope id. */
     unlink: {
       mutate: (input: { workspaceId: string; linkId: string }) => Promise<unknown>;
     };

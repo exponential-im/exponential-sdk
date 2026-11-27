@@ -88,6 +88,7 @@ export interface DecisionOccurrenceRef {
 export interface DecisionChainRef {
   id: string;
   number: number;
+  title?: string | null;
   statement: string;
   status: DecisionStatus;
 }
@@ -107,16 +108,31 @@ export interface DecisionFeatureRef {
   status: string;
 }
 
-/** An "implemented by" edge to a ticket or a feature. */
+/** A feature's scope (V1, V2, ...), as a link carries it. */
+export interface DecisionScopeRef {
+  id: string;
+  version: string;
+  description: string | null;
+  featureId: string;
+  feature?: { id: string; name: string } | null;
+}
+
+/**
+ * An "implemented by" edge to a ticket, a feature or one of a feature's
+ * scopes. Exactly one of `ticketId`, `featureId` and `scopeId` is set.
+ */
 export interface DecisionLink {
   id: string;
   decisionId: string;
   ticketId: string | null;
   featureId: string | null;
+  /** Servers from exponential-app PR 1232 on; absent (undefined) before. */
+  scopeId?: string | null;
   createdById: string;
   createdAt: Date;
   ticket?: DecisionTicketRef | null;
   feature?: DecisionFeatureRef | null;
+  scope?: DecisionScopeRef | null;
   createdBy?: DecisionUserRef;
 }
 
@@ -138,6 +154,12 @@ export interface DecisionListRow {
   number: number;
   /** `D-` plus the zero-padded number, e.g. `D-0042`. */
   label: string;
+  /**
+   * The outcome in six words or fewer, e.g. "Text place beats Dataminr
+   * location". Optional: a decision without one reads by its `statement`.
+   * Servers from exponential-app PR 1232 on; absent (undefined) before.
+   */
+  title?: string | null;
   statement: string;
   status: DecisionStatus;
   source: DecisionSource;
@@ -178,6 +200,12 @@ export interface Decision {
   workspaceId: string;
   number: number;
   label: string;
+  /**
+   * The outcome in six words or fewer, e.g. "Text place beats Dataminr
+   * location". Optional: a decision without one reads by its `statement`.
+   * Servers from exponential-app PR 1232 on; absent (undefined) before.
+   */
+  title?: string | null;
   statement: string;
   /** Markdown, with ADR headings (context / alternatives / consequences). */
   body: string | null;
