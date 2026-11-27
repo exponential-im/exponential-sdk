@@ -1,3 +1,4 @@
+import type { DecisionStatus } from './decision.js';
 import type { TicketComment } from './comment.js';
 // Ticket types matching the Exponential API responses.
 // Tickets are the unit of work in the product backlog and can link
@@ -84,6 +85,19 @@ export interface Ticket {
   };
 }
 
+/** A decision linked to a ticket, as `tickets.get` returns it. */
+export interface TicketDecision {
+  id: string;
+  /** Workspace sequence number; `label` is its `D-0042` form. */
+  number: number;
+  label: string;
+  statement: string;
+  status: DecisionStatus;
+  decidedAt: Date | string | null;
+  /** The DecisionLink row, for removing the link with `decisions.unlink`. */
+  linkId: string | null;
+}
+
 export interface TicketDetail extends Ticket {
   product?: {
     id: string;
@@ -101,6 +115,13 @@ export interface TicketDetail extends Ticket {
     completedAt: Date | null;
     kanbanStatus: string | null;
   }>;
+  /**
+   * Decisions linked "implemented by" this ticket (ADR-0060), in D-number
+   * order. Same visibility as the Decision Log: drafts and decisions the
+   * caller may not read are left out. An OPEN decision reads as a question
+   * raised on the ticket.
+   */
+  decisions?: TicketDecision[];
   /**
    * The ticket's discussion, newest first. The detail fetch is the only way to
    * read ticket comments — there is no standalone list endpoint.
