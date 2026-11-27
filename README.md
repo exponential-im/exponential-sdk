@@ -272,6 +272,33 @@ await client.decisions.setStatus({ workspaceId: "ws-123", decisionId: "d1", stat
 await client.decisions.linkTicket("ws-123", "d1", "ticket-123");
 ```
 
+#### Titles and scope links
+
+A decision can carry a short `title`: the outcome in six words or fewer
+("Text place beats Dataminr location"). Every decision list shows the title
+when there is one, with the statement under it; without one, the statement is
+the row text. `create` and `update` take it (max 120 characters; pass `null`
+to clear it), list and detail rows return it, and `search` matches it.
+
+`linkScope` links a decision to one of a feature's scopes (V1, V2, ...)
+instead of the whole feature. The decision then shows on the feature's
+Decisions block with the scope's version, and on a Pillar page it groups under
+that scope. On `get`, the link's `scope` carries `{ id, version, description, status, feature: { id, name } }`.
+
+```typescript
+await client.decisions.create({
+  workspaceId: "ws-123",
+  title: "Text place beats Dataminr location",
+  statement: "We geolocate alerts from the place named in the text, not Dataminr's location field.",
+  status: "ACCEPTED",
+});
+await client.decisions.linkScope("ws-123", "d1", "scope-id");
+await client.decisions.update({ workspaceId: "ws-123", decisionId: "d1", title: null });
+```
+
+Titles and scope links need a server from exponential-app PR 1232 on; older
+servers ignore `title` and have no `linkScope`.
+
 #### Pillars and labels
 
 A decision is filed under Pillars and labels. `create` takes no tags and `get`

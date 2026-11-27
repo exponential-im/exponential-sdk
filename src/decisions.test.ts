@@ -24,6 +24,7 @@ function makeClient() {
     setStatus: vi.fn().mockResolvedValue({ id: 'd1', status: 'ACCEPTED' }),
     linkTicket: vi.fn().mockResolvedValue({ id: 'l1', ticketId: 't1' }),
     linkFeature: vi.fn().mockResolvedValue({ id: 'l2', featureId: 'f1' }),
+    linkScope: vi.fn().mockResolvedValue({ id: 'l3', scopeId: 's1' }),
     unlink: vi.fn().mockResolvedValue({ deleted: true }),
     confirmDraft: vi.fn().mockResolvedValue({ id: 'd1', reviewState: 'CONFIRMED' }),
     rejectDraft: vi.fn().mockResolvedValue({ id: 'd1', reviewState: 'REJECTED' }),
@@ -42,6 +43,7 @@ function makeClient() {
       setStatus: { mutate: calls.setStatus },
       linkTicket: { mutate: calls.linkTicket },
       linkFeature: { mutate: calls.linkFeature },
+      linkScope: { mutate: calls.linkScope },
       unlink: { mutate: calls.unlink },
       confirmDraft: { mutate: calls.confirmDraft },
       rejectDraft: { mutate: calls.rejectDraft },
@@ -166,6 +168,24 @@ describe('DecisionsApi.create', () => {
   });
 });
 
+describe('DecisionsApi titles', () => {
+  it('carries the title on create', async () => {
+    const { api, create } = makeClient();
+    await api.create({ workspaceId: 'w1', title: 'Ship Fridays', statement: 'Ship on Friday' });
+    expect(create).toHaveBeenCalledWith({
+      workspaceId: 'w1',
+      title: 'Ship Fridays',
+      statement: 'Ship on Friday',
+    });
+  });
+
+  it('clears the title with null on update', async () => {
+    const { api, update } = makeClient();
+    await api.update({ workspaceId: 'w1', decisionId: 'd1', title: null });
+    expect(update).toHaveBeenCalledWith({ workspaceId: 'w1', decisionId: 'd1', title: null });
+  });
+});
+
 describe('DecisionsApi.setStatus', () => {
   it('carries supersededById when superseding', async () => {
     const { api, setStatus } = makeClient();
@@ -202,6 +222,16 @@ describe('DecisionsApi links', () => {
       workspaceId: 'w1',
       decisionId: 'd1',
       featureId: 'f1',
+    });
+  });
+
+  it('links a scope', async () => {
+    const { api, linkScope } = makeClient();
+    await api.linkScope('w1', 'd1', 's1');
+    expect(linkScope).toHaveBeenCalledWith({
+      workspaceId: 'w1',
+      decisionId: 'd1',
+      scopeId: 's1',
     });
   });
 
